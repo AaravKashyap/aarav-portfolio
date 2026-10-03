@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tendon-Driven Robotic Hand — Aarav Kashyap</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header>
+  <a class="logo" href="../index.html">Aarav Kashyap</a>
+  <nav>
+    <a href="../index.html#projects">Work</a>
+    <a href="../about.html">About</a>
+    <a href="../assets/resume.pdf">Resume</a>
+    <a href="../index.html#contact" class="cta">Contact</a>
+  </nav>
+</header>
+
+<a class="back-link" href="../index.html#projects">← Back to projects</a>
+
+<div class="detail-hero">
+  <div class="container">
+    <div class="detail-kicker">Robotics · Hardware + Firmware + Computer Vision</div>
+    <h1 class="detail-title">Tendon-Driven Robotic Hand</h1>
+    <p class="detail-sub">A from-scratch build of a paracord-tendon robotic hand — CAD assembly, custom parts, servo wiring, and two working control schemes: keyboard, and real-time webcam hand-tracking.</p>
+    <div class="detail-tags">
+      <span class="tag">Fusion 360</span><span class="tag">Arduino</span><span class="tag">Python</span><span class="tag">MediaPipe</span><span class="tag">PCA9685</span>
+    </div>
+  </div>
+</div>
+
+<div class="detail-hero-media">
+  <video autoplay muted loop playsinline poster="../assets/arm-wave-poster.jpg">
+    <source src="../assets/arm-wave.mp4" type="video/mp4">
+  </video>
+  <div class="wm-mask tl"></div>
+  <div class="wm-mask br"></div>
+</div>
+
+<div class="container">
+  <div class="detail-specs">
+    <div class="spec"><div class="spec-label">Fingers</div><div class="spec-value">4 + opposable thumb</div></div>
+    <div class="spec"><div class="spec-label">Actuators</div><div class="spec-value">5× MG995 + 1 micro servo</div></div>
+    <div class="spec"><div class="spec-label">Driver</div><div class="spec-value">PCA9685 + Arduino Uno</div></div>
+    <div class="spec"><div class="spec-label">Tendons</div><div class="spec-value">Paracord + fishing-line return</div></div>
+  </div>
+</div>
+
+<div class="detail-body">
+  <h3>Overview</h3>
+  <p>This hand started from a set of 9 raw STL files based on Robert Gross's open-source "Humanoid Robotic Hand" design, originally published on Thingiverse. Getting from those files to a working hand meant assembling everything in Fusion 360 with correct joints, then designing several fully custom parts — including a flat-base standing end cap and a reverse-engineered "star-style" servo horn matched to real MG995 hardware, since the original horn design didn't fit the servos actually available.</p>
+  <p>Four fingers plus an offset, angled thumb are driven by paracord tendons routed through channels in each phalange, pulled by servo-driven winches mounted in the forearm, with fishing line handling the return pull as each servo relaxes. The whole hand also rotates at the base.</p>
+
+  <h3>Electronics</h3>
+  <p>Six servos in total — five MG995 metal-gear servos for wrist rotation and the four main fingers, plus one micro servo dedicated to rotating the thumb sideways — are driven through a PCA9685 driver board talking to an Arduino Uno R3 over I2C. Each joint has a fixed channel on the board:</p>
+  <ul>
+    <li>Channel 0 — base rotation (wrist)</li>
+    <li>Channel 2 — index finger</li>
+    <li>Channel 4 — ring + pinky fingers (ganged together)</li>
+    <li>Channel 6 — thumb main curl</li>
+    <li>Channel 8 — middle finger</li>
+    <li>Channel 10 — thumb sideways (micro servo)</li>
+  </ul>
+
+  <h3>Control: keyboard</h3>
+  <p>The first working control scheme pairs an Arduino sketch with a Python script running on the computer. The Arduino listens for single-character commands over serial and nudges the matching servo channel; the Python side watches the keyboard and streams commands continuously while a key is held, since the Arduino IDE's own Serial Monitor only sends one character per keypress.</p>
+  <ul>
+    <li>Q / W — base rotation</li>
+    <li>A / S — index finger</li>
+    <li>Z / X — ring + pinky</li>
+    <li>E / R — thumb curl</li>
+    <li>D / F — middle finger</li>
+    <li>C / V — thumb sideways</li>
+    <li>Space — center every joint</li>
+  </ul>
+
+  <h3>Control: webcam hand-tracking</h3>
+  <p>The more ambitious goal was to skip the keyboard entirely and have the hand mimic my actual hand through a webcam in real time. Getting there took three attempts. Native Python with MediaPipe kept crashing on startup with a Metal/GPU delegate failure that turned out to be tied to how MediaPipe's native build interacts with Apple Silicon. Switching to Ultralytics YOLO's pose model avoided the crash, but pose models only track whole-body keypoints — shoulders, elbows, wrists — with no concept of individual fingers, so it couldn't actually drive finger motion.</p>
+  <p>The fix was moving MediaPipe into the browser. MediaPipe ships a JavaScript build that runs via WebAssembly, sidestepping the native crash entirely, and Chrome's Web Serial API can talk to the Arduino directly from a webpage with no Python needed at all. The final setup is a single HTML file: it reads all 21 landmarks per hand from the webcam feed, computes a curl value for each finger from landmark geometry, maps that curl to a servo position, and streams it straight to the Arduino — mirroring my hand's finger curls and wrist position onto the robotic hand live.</p>
+
+  <h3>Credits</h3>
+  <p>Built with Nikhil Pant, based on Robert Gross's open-source Humanoid Robotic Hand design. Custom modifications — the flat-base end cap, star-style servo horn, finger and hole resizing, and motor changes — are original additions for this build. Funded by Anshul Kashyap.</p>
+
+  <h3>Demos</h3>
+  <ul>
+    <li><a href="https://youtu.be/nOaQFGHf6Is" target="_blank" rel="noopener">Hand-tracking test 2</a></li>
+    <li><a href="https://youtu.be/54FqDHi_nwc" target="_blank" rel="noopener">Hand-tracking test 1</a></li>
+    <li><a href="https://youtube.com/shorts/pMqxdinKgcE" target="_blank" rel="noopener">Robotic hand with thumb motor</a></li>
+    <li><a href="https://youtube.com/shorts/Dj_6OKidGuU" target="_blank" rel="noopener">Keyboard control test</a></li>
+    <li><a href="https://youtube.com/shorts/A0xrfPaRiSM" target="_blank" rel="noopener">Base rotation + hand attachment</a></li>
+  </ul>
+</div>
+
+<div class="detail-nav">
+  <a href="../index.html#projects">← All projects</a>
+  <a href="../about.html">More about me →</a>
+</div>
+
+<footer>
+  <span>© 2026 Aarav Kashyap</span>
+  <span>Built for robotics recruiting season</span>
+</footer>
+</body>
+</html>
